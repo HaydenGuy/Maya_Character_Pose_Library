@@ -9,6 +9,7 @@ import maya.cmds as cmds
 sys.path.append('/mnt/185EB3E65EB3BAB8/Maya_Scripts/Virtual_Environment/Character_Pose_Library')
 
 from PySide2.QtWidgets import QMainWindow, QApplication
+from PySide2.QtCore import QStringListModel
 import UI.Ui_Character_Pose_Library  # Import the entire module
 
 def reload_module(module_name):
@@ -26,29 +27,56 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         super().__init__()
         self.setupUi(self)
         
+        # Initalize a dictionary of poses
+        self.poses = {}
+
+        # Creates the list model that allows the list data to be displayed and manipulated
+        self.list_model = QStringListModel()
+        self.listView.setModel(self.list_model)
+
         # Connect button clicks to functions
         self.pb_save.clicked.connect(self.pose_save)
         self.pb_recall.clicked.connect(self.pose_recall)
 
     def pose_save(self):
+        # Sets the pose name to the text in the line edit
+        pose_name = self.pose_name_input.text()
+
         # Get the first selected object's name
         object_name = cmds.ls(selection=True)[0]
         
         # Get translation, rotation, and scale attributes of the object
-        self.translation = cmds.getAttr(f'{object_name}.translate')[0]
-        self.rotation = cmds.getAttr(f'{object_name}.rotate')[0]
-        self.scale = cmds.getAttr(f'{object_name}.scale')[0]
+        translation = cmds.getAttr(f'{object_name}.translate')[0]
+        rotation = cmds.getAttr(f'{object_name}.rotate')[0]
+        scale = cmds.getAttr(f'{object_name}.scale')[0]
 
-        return self.translation, self.rotation, self.scale
+        '''
+            If the pose name isn't in the poses dictionary
+            Creates a new entry to the dictionary key=pose_name, value=pose_data
+            Adds the pose_name to the list_model in the listView
+        '''
+        if pose_name not in self.poses:
+            pose_data = {'Translate': translation,
+                        'Rotation': rotation,
+                        'Scale': scale
+                        }
+            self.poses[pose_name] = pose_data
+
+            list_items = self.list_model.stringList()
+            list_items.append(pose_name)
+            self.list_model.setStringList(list_items)
     
     def pose_recall(self):
+        selected_list_indexes = self.listView.selectedIndexes()
+        selected_list_item = selected_list_indexes[0].data()
+
         # Get the first selected object's name
         object_name = cmds.ls(selection=True)[0]
         
-        # Set translation, rotation, and scale attributes of the object       
-        cmds.setAttr(f'{object_name}.translate', self.translation[0], self.translation[1], self.translation[2], type='double3')
-        cmds.setAttr(f'{object_name}.rotate', self.rotation[0], self.rotation[1], self.rotation[2], type='double3')
-        cmds.setAttr(f'{object_name}.scale', self.scale[0], self.scale[1], self.scale[2], type='double3')
+        # # Set translation, rotation, and scale attributes of the object       
+        # cmds.setAttr(f'{object_name}.translate', self.translation[0], self.translation[1], self.translation[2], type='double3')
+        # cmds.setAttr(f'{object_name}.rotate', self.rotation[0], self.rotation[1], self.rotation[2], type='double3')
+        # cmds.setAttr(f'{object_name}.scale', self.scale[0], self.scale[1], self.scale[2], type='double3')
 
 
 if __name__ == '__main__':
