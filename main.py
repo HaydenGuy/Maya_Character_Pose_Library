@@ -1,5 +1,6 @@
 import sys
 import importlib
+import json
 import maya.cmds as cmds
 
 '''
@@ -8,7 +9,7 @@ import maya.cmds as cmds
 '''
 sys.path.append('/mnt/185EB3E65EB3BAB8/Maya_Scripts/Virtual_Environment/Character_Pose_Library')
 
-from PySide2.QtWidgets import QMainWindow, QApplication
+from PySide2.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PySide2.QtCore import QStringListModel
 import UI.Ui_Character_Pose_Library  # Import the entire module
 
@@ -43,7 +44,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         self.actionNew.triggered.connect(self.new_file)
         # self.actionOpen.triggered.connect(self.open_file)
         # self.actionSave.triggered.connect(self.save_file)
-        # self.actionSave_As.triggered.connect(self.save_as_file)
+        self.actionSave_As.triggered.connect(self.save_as_file)
         self.actionQuit.triggered.connect(self.quit_file)
 
     def pose_save(self):
@@ -109,6 +110,22 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         self.pose_name_input.clear()
         self.poses = {}
         self.list_model.setStringList([])
+
+    # Saves the file to a new file
+    def save_as_file(self):
+        # Uses QFileDialog to open a save dialog box
+        file_path, _ = QFileDialog.getSaveFileName(self, 'Save Pose As', '', 'Text File (*.txt)')
+        
+        '''
+            If a file path exists
+            with: manages file state, ensures it closes correctly
+            open() the file indicated by file path in 'w' write mode
+            as f: giving the opened file the nickname f
+            json.dump(): taking the data from self.poses and coverts into readable file
+        '''
+        if file_path:
+            with open(file_path, 'w') as f:
+                json.dump(self.poses, f)
 
     # Closes the Character Pose Library window
     def quit_file(self):
