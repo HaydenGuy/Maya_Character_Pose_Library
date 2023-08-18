@@ -18,7 +18,7 @@ def reload_module(module_name):
     if module_name in sys.modules:
         importlib.reload(sys.modules[module_name])
 
-# Reload the UI module before anything else
+# Reload the UI module on startup
 module_name = 'UI.Ui_Character_Pose_Library'    
 reload_module(module_name)
 
@@ -30,6 +30,9 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         
         # Initalize a dictionary of poses
         self.poses = {}
+
+        # Creates a current file variable to monitor the currently open file
+        self.current_file = 'new'
 
         # Creates the list model that allows the list data to be displayed and manipulated
         self.list_model = QStringListModel()
@@ -43,7 +46,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         # The signals for the File menu bar items
         self.actionNew.triggered.connect(self.new_file)
         self.actionOpen.triggered.connect(self.open_file)
-        # self.actionSave.triggered.connect(self.save_file)
+        self.actionSave.triggered.connect(self.save_file)
         self.actionSave_As.triggered.connect(self.save_as_file)
         self.actionQuit.triggered.connect(self.quit_file)
 
@@ -110,6 +113,8 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         
     # Resets the UI by clearing all the stored data
     def new_file(self):
+        self.current_file = 'new'
+        self.setWindowTitle('Character Pose Library - new')
         self.pose_name_input.clear()
         self.poses = {}
         self.list_model.setStringList([])
@@ -120,13 +125,20 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', '')
 
         '''
-            If a file path exists
+            If a file path is given (i.e. open a file)
+            Clear all the UI data stored so its not adding on top of existing
+            Call the get file name function
             with: manages file state, ensures it closes correctly
             open() the file indicated by file path in 'r' read mode
             as f: giving the opened file the nickname f
             Assign self.poses dictionary the data from the loaded file
         '''
         if file_path:
+            self.pose_name_input.clear()
+            self.poses = {}
+            self.list_model.setStringList([])
+            self.get_file_name(file_path)
+
             with open(file_path, 'r') as f:
                 self.poses = json.load(f)
 
@@ -136,21 +148,51 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
                     list_items.append(pose_name)
                 self.list_model.setStringList(list_items)
 
+    # Saves the current file, runs save as if the current file is 'new'
+    def save_file(self):
+        if self.current_file == 'new':
+            self.save_as_file()
+        else:
+            '''
+            with: manages file state, ensures it closes correctly
+            open() the file indicated by file path in 'w' write mode
+            as f: giving the opened file the nickname f
+            json.dump(): taking the data from self.poses and coverts into readable file
+            '''
+            with open(self.current_file, 'w') as f:
+                json.dump(self.poses, f)
+        
     # Saves the file to a new file
     def save_as_file(self):
         # Uses QFileDialog to open a save dialog box
         file_path, _ = QFileDialog.getSaveFileName(self, 'Save Pose As', '')
-        
+
         '''
-            If a file path exists
+            If a file path is given (i.e. a save happens)
+            Call the get file name function 
             with: manages file state, ensures it closes correctly
             open() the file indicated by file path in 'w' write mode
             as f: giving the opened file the nickname f
             json.dump(): taking the data from self.poses and coverts into readable file
         '''
         if file_path:
+            self.get_file_name(file_path)
+
             with open(file_path, 'w') as f:
                 json.dump(self.poses, f)
+
+    # Gets the file name of the open/saved file by passing a file path
+    def get_file_name(self, file_path):
+        '''
+            Extract the file name from file path
+            If the file path contains a / it splits it and extracts the last part (the file name)
+            If no / it assigns the file name as the file path
+            Updates the window title to be the name of the newly named file
+            Updates the current file variable to be the file name
+        '''
+        file_name = file_path.split('/')[-1] if '/' in file_path else file_path
+        self.setWindowTitle(f'Character Pose Library - {file_name}')
+        self.current_file = file_name
 
     # Closes the Character Pose Library window
     def quit_file(self):
