@@ -37,6 +37,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         # Connect button clicks to functions
         self.pb_save.clicked.connect(self.pose_save)
         self.pb_recall.clicked.connect(self.pose_recall)
+        self.pb_delete.clicked.connect(self.pose_delete)
 
     def pose_save(self):
         # Sets the pose name to the text in the line edit
@@ -84,6 +85,18 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
         cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
 
+    def pose_delete(self):
+        # Retrieves data about the currently selected item in the list
+        selected_list_indexes = self.listView.selectedIndexes()
+        selected_list_item = selected_list_indexes[0].data()
+
+        # Remove the pose data from the dictionary and update the list model
+        if selected_list_item in self.poses:
+            del self.poses[selected_list_item]
+            list_items = self.list_model.stringList()
+            list_items.remove(selected_list_item)
+            self.list_model.setStringList(list_items)
+        
 
 if __name__ == '__main__':
     # Create a Qt application instance or use the existing one
