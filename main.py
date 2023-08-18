@@ -67,16 +67,22 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
             self.list_model.setStringList(list_items)
     
     def pose_recall(self):
+        # Retrieves data about the currently selected item in the list
         selected_list_indexes = self.listView.selectedIndexes()
         selected_list_item = selected_list_indexes[0].data()
 
         # Get the first selected object's name
         object_name = cmds.ls(selection=True)[0]
-        
-        # # Set translation, rotation, and scale attributes of the object       
-        # cmds.setAttr(f'{object_name}.translate', self.translation[0], self.translation[1], self.translation[2], type='double3')
-        # cmds.setAttr(f'{object_name}.rotate', self.rotation[0], self.rotation[1], self.rotation[2], type='double3')
-        # cmds.setAttr(f'{object_name}.scale', self.scale[0], self.scale[1], self.scale[2], type='double3')
+
+        # Extracts the translation, rotation, and scale data from the poses dictionary based on the list item selected
+        translation = self.poses[selected_list_item]['Translate']
+        rotation = self.poses[selected_list_item]['Rotation']
+        scale = self.poses[selected_list_item]['Scale']
+
+        # Set translation, rotation, and scale attributes of the selected object by calling the poses dictionary values
+        cmds.setAttr(f'{object_name}.translate', translation[0], translation[1], translation[2], type='double3')
+        cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
+        cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
 
 
 if __name__ == '__main__':
