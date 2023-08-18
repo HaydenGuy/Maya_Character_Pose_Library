@@ -42,11 +42,12 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
 
         # The signals for the File menu bar items
         self.actionNew.triggered.connect(self.new_file)
-        # self.actionOpen.triggered.connect(self.open_file)
+        self.actionOpen.triggered.connect(self.open_file)
         # self.actionSave.triggered.connect(self.save_file)
         self.actionSave_As.triggered.connect(self.save_as_file)
         self.actionQuit.triggered.connect(self.quit_file)
 
+    # Saves the pose name and data when the button is pressed
     def pose_save(self):
         # Sets the pose name to the text in the line edit
         pose_name = self.pose_name_input.text()
@@ -75,6 +76,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
             list_items.append(pose_name)
             self.list_model.setStringList(list_items)
     
+    # Recalls the pose data of the selected list pose
     def pose_recall(self):
         # Retrieves data about the currently selected item in the list
         selected_list_indexes = self.listView.selectedIndexes()
@@ -93,6 +95,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
         cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
 
+    # Deletes the selected pose from the list
     def pose_delete(self):
         # Retrieves data about the currently selected item in the list
         selected_list_indexes = self.listView.selectedIndexes()
@@ -111,10 +114,32 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         self.poses = {}
         self.list_model.setStringList([])
 
+    # Opens an existing file
+    def open_file(self):
+        # Uses QFileDialog to open a save dialog box
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Open file', '')
+
+        '''
+            If a file path exists
+            with: manages file state, ensures it closes correctly
+            open() the file indicated by file path in 'r' read mode
+            as f: giving the opened file the nickname f
+            Assign self.poses dictionary the data from the loaded file
+        '''
+        if file_path:
+            with open(file_path, 'r') as f:
+                self.poses = json.load(f)
+
+                # Updates the list view by looping an append over each item in the poses dict
+                list_items = self.list_model.stringList()
+                for pose_name in self.poses:
+                    list_items.append(pose_name)
+                self.list_model.setStringList(list_items)
+
     # Saves the file to a new file
     def save_as_file(self):
         # Uses QFileDialog to open a save dialog box
-        file_path, _ = QFileDialog.getSaveFileName(self, 'Save Pose As', '', 'Text File (*.txt)')
+        file_path, _ = QFileDialog.getSaveFileName(self, 'Save Pose As', '')
         
         '''
             If a file path exists
