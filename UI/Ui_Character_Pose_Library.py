@@ -140,7 +140,7 @@ class Ui_library_window(object):
     # setupUi
 
     def retranslateUi(self, library_window):
-        library_window.setWindowTitle(QCoreApplication.translate("library_window", u"Character Pose Library", None))
+        library_window.setWindowTitle(QCoreApplication.translate("library_window", u"Character Pose Library - new", None))
         self.actionSave.setText(QCoreApplication.translate("library_window", u"Save", None))
         self.actionSave_As.setText(QCoreApplication.translate("library_window", u"Save As..", None))
         self.actionNew.setText(QCoreApplication.translate("library_window", u"New...", None))

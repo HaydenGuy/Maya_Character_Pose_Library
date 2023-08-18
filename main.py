@@ -2,6 +2,7 @@ import sys
 import importlib
 import json
 import maya.cmds as cmds
+import maya.OpenMaya as om
 
 '''
     Calls the path to the root directory so Maya can access files in the directory
@@ -55,48 +56,60 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         # Sets the pose name to the text in the line edit
         pose_name = self.pose_name_input.text()
 
-        # Get the first selected object's name
-        object_name = cmds.ls(selection=True)[0]
-        
-        # Get translation, rotation, and scale attributes of the object
-        translation = cmds.getAttr(f'{object_name}.translate')[0]
-        rotation = cmds.getAttr(f'{object_name}.rotate')[0]
-        scale = cmds.getAttr(f'{object_name}.scale')[0]
+        # Raises a warning if the pose name already exists
+        if pose_name in self.poses:
+            om.MGlobal.displayWarning('Pose name already exists')
+            return
 
-        '''
-            If the pose name isn't in the poses dictionary
-            Creates a new entry to the dictionary key=pose_name, value=pose_data
-            Adds the pose_name to the list_model in the listView
-        '''
-        if pose_name not in self.poses:
-            pose_data = {'Translate': translation,
+        # Get the selected object names, including their children
+        selected_objects = cmds.ls(selection=True)
+
+        # Create a dictionary to store the pose data for the selected objects
+        pose_data = {}
+
+        for object_name in selected_objects:
+            # Get translation, rotation, and scale attributes of the object
+            translation = cmds.getAttr(f'{object_name}.translate')[0]
+            rotation = cmds.getAttr(f'{object_name}.rotate')[0]
+            scale = cmds.getAttr(f'{object_name}.scale')[0]
+
+            # Create a dictionary to store the transformation data for this object
+            object_data = {'Translate': translation,
                         'Rotation': rotation,
                         'Scale': scale
                         }
+            
+            # Append the object_data to the pose_data dictionary under the object_name key
+            pose_data[object_name] = object_data
+
+        # Store the pose data under the given pose name    
+        if pose_name:
             self.poses[pose_name] = pose_data
 
             list_items = self.list_model.stringList()
             list_items.append(pose_name)
             self.list_model.setStringList(list_items)
-    
+
     # Recalls the pose data of the selected list pose
     def pose_recall(self):
         # Retrieves data about the currently selected item in the list
         selected_list_indexes = self.listView.selectedIndexes()
         selected_list_item = selected_list_indexes[0].data()
 
-        # Get the first selected object's name
-        object_name = cmds.ls(selection=True)[0]
+        # Get the pose data for the selected pose name
+        if selected_list_item in self.poses:
+            pose_data = self.poses[selected_list_item]
+            
+            # Loop through the pose_data items to get the transformations for each
+            for object_name, object_data in pose_data.items():
+                translation = object_data['Translate']
+                rotation = object_data['Rotation']
+                scale = object_data['Scale']
 
-        # Extracts the translation, rotation, and scale data from the poses dictionary based on the list item selected
-        translation = self.poses[selected_list_item]['Translate']
-        rotation = self.poses[selected_list_item]['Rotation']
-        scale = self.poses[selected_list_item]['Scale']
-
-        # Set translation, rotation, and scale attributes of the selected object by calling the poses dictionary values
-        cmds.setAttr(f'{object_name}.translate', translation[0], translation[1], translation[2], type='double3')
-        cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
-        cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
+                # Set translation, rotation, and scale attributes of the selected object
+                cmds.setAttr(f'{object_name}.translate', translation[0], translation[1], translation[2], type='double3')
+                cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
+                cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
 
     # Deletes the selected pose from the list
     def pose_delete(self):
