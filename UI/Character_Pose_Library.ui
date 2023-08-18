@@ -15,10 +15,15 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="7" column="0">
+    <item row="5" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QListView" name="listView">
+        <property name="font">
+         <font>
+          <pointsize>13</pointsize>
+         </font>
+        </property>
         <property name="editTriggers">
          <set>QAbstractItemView::NoEditTriggers</set>
         </property>
@@ -29,7 +34,25 @@
       </item>
      </layout>
     </item>
-    <item row="3" column="0">
+    <item row="6" column="0">
+     <layout class="QHBoxLayout" name="hbox_buttons">
+      <item>
+       <widget class="QPushButton" name="pb_recall">
+        <property name="text">
+         <string>Recall Pose</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pb_delete">
+        <property name="text">
+         <string>Delete Pose</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="leftMargin">
        <number>0</number>
@@ -39,6 +62,11 @@
       </property>
       <item>
        <widget class="QLabel" name="lb_pose_name">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Pose Name:</string>
         </property>
@@ -46,6 +74,17 @@
       </item>
       <item>
        <widget class="QLineEdit" name="pose_name_input">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="clearButtonEnabled">
          <bool>false</bool>
         </property>
@@ -81,24 +120,6 @@
       </item>
      </layout>
     </item>
-    <item row="8" column="0">
-     <layout class="QHBoxLayout" name="hbox_buttons">
-      <item>
-       <widget class="QPushButton" name="pb_recall">
-        <property name="text">
-         <string>Recall Pose</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pb_delete">
-        <property name="text">
-         <string>Delete Pose</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -107,12 +128,69 @@
      <x>0</x>
      <y>0</y>
      <width>507</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border-bottom: 1px solid grey;</string>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_As"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="text">
+    <string>Save As..</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New...</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open...</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
  </widget>
+ <tabstops>
+  <tabstop>pose_name_input</tabstop>
+  <tabstop>pb_save</tabstop>
+  <tabstop>listView</tabstop>
+  <tabstop>pb_recall</tabstop>
+  <tabstop>pb_delete</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

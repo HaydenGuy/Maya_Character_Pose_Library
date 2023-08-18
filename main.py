@@ -34,10 +34,17 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         self.list_model = QStringListModel()
         self.listView.setModel(self.list_model)
 
-        # Connect button clicks to functions
+        # The signals for the UI buttons
         self.pb_save.clicked.connect(self.pose_save)
         self.pb_recall.clicked.connect(self.pose_recall)
         self.pb_delete.clicked.connect(self.pose_delete)
+
+        # The signals for the File menu bar items
+        self.actionNew.triggered.connect(self.new_file)
+        # self.actionOpen.triggered.connect(self.open_file)
+        # self.actionSave.triggered.connect(self.save_file)
+        # self.actionSave_As.triggered.connect(self.save_as_file)
+        self.actionQuit.triggered.connect(self.quit_file)
 
     def pose_save(self):
         # Sets the pose name to the text in the line edit
@@ -97,6 +104,15 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
             list_items.remove(selected_list_item)
             self.list_model.setStringList(list_items)
         
+    # Resets the UI by clearing all the stored data
+    def new_file(self):
+        self.pose_name_input.clear()
+        self.poses = {}
+        self.list_model.setStringList([])
+
+    # Closes the Character Pose Library window
+    def quit_file(self):
+        self.close()
 
 if __name__ == '__main__':
     # Create a Qt application instance or use the existing one
