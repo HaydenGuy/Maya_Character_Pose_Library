@@ -14,6 +14,7 @@ from PySide2.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PySide2.QtCore import QStringListModel
 import UI.Ui_Character_Pose_Library  # Import the entire module
 
+# remove this when finished it is only needed to reload when there is a UI update
 def reload_module(module_name):
     # Reloads a module if it's already in sys.modules
     if module_name in sys.modules:
