@@ -1,5 +1,4 @@
 import sys
-import importlib
 import json
 import maya.cmds as cmds
 import maya.OpenMaya as om
@@ -8,22 +7,11 @@ import maya.OpenMaya as om
     Calls the path to the root directory so Maya can access files in the directory
     Replace this with your own directory path
 '''
-sys.path.append('/mnt/185EB3E65EB3BAB8/Maya_Scripts/Virtual_Environment/Character_Pose_Library')
+sys.path.append('/mnt/32346261-2a77-4ea4-ad97-df46c23e0f72/Maya_Scripts/Character_Pose_Library')
 
 from PySide2.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PySide2.QtCore import QStringListModel
 import UI.Ui_Character_Pose_Library  # Import the entire module
-
-# remove this when finished it is only needed to reload when there is a UI update
-def reload_module(module_name):
-    # Reloads a module if it's already in sys.modules
-    if module_name in sys.modules:
-        importlib.reload(sys.modules[module_name])
-
-# Reload the UI module on startup
-module_name = 'UI.Ui_Character_Pose_Library'    
-reload_module(module_name)
-
 
 class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window):
     def __init__(self):
@@ -52,65 +40,105 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
         self.actionSave_As.triggered.connect(self.save_as_file)
         self.actionQuit.triggered.connect(self.quit_file)
 
+    # Gets the transforms of the root object and returns the transforms dictionary
+    def get_object_transforms(self, root_object):
+        transforms = {}
+
+        # Adds the children of root objects transforms to the transforms dictionary
+        def recursive_get_transforms(obj):
+            # Get translation, rotation, and scale attributes of the object
+            translation = cmds.getAttr(f'{obj}.translate')[0]
+            rotation = cmds.getAttr(f'{obj}.rotate')[0]
+            scale = cmds.getAttr(f'{obj}.scale')[0]
+            
+            # Store the transformation data in the transforms dictionary
+            transforms[obj] = {'Translate': translation, 'Rotation': rotation, 'Scale': scale}
+
+            # Get children of the current object
+            children = cmds.listRelatives(obj, children=True, type='transform') or []
+            for child in children:
+                # Recursively call the function for each child
+                recursive_get_transforms(child)
+
+        recursive_get_transforms(root_object)
+        return transforms
+    
     # Saves the pose name and data when the button is pressed
     def pose_save(self):
         # Sets the pose name to the text in the line edit
         pose_name = self.pose_name_input.text()
+
+        # Raises a warning if trying to save without a name
+        if pose_name == '':
+            om.MGlobal.displayWarning('Please enter a name')
+            return
 
         # Raises a warning if the pose name already exists
         if pose_name in self.poses:
             om.MGlobal.displayWarning('Pose name already exists')
             return
 
-        # Get the selected object names, including their children
-        selected_objects = cmds.ls(selection=True)
+        # Get the currently selected object
+        selected_object = cmds.ls(selection=True, type='transform')
 
-        # Create a dictionary to store the pose data for the selected objects
-        pose_data = {}
+        if selected_object:
+            # Take the first selected object as the root object
+            root_object = selected_object[0]
 
-        for object_name in selected_objects:
-            # Get translation, rotation, and scale attributes of the object
-            translation = cmds.getAttr(f'{object_name}.translate')[0]
-            rotation = cmds.getAttr(f'{object_name}.rotate')[0]
-            scale = cmds.getAttr(f'{object_name}.scale')[0]
+            # Call the method to get transforms of the entire hierarchy under the root object
+            object_transforms = self.get_object_transforms(root_object)
 
-            # Create a dictionary to store the transformation data for this object
-            object_data = {'Translate': translation,
-                        'Rotation': rotation,
-                        'Scale': scale
-                        }
-            
-            # Append the object_data to the pose_data dictionary under the object_name key
-            pose_data[object_name] = object_data
+            # Store the rig transforms in the poses dictionary
+            self.poses[pose_name] = object_transforms
 
-        # Store the pose data under the given pose name    
-        if pose_name:
-            self.poses[pose_name] = pose_data
-
-            list_items = self.list_model.stringList()
-            list_items.append(pose_name)
-            self.list_model.setStringList(list_items)
+        # Update the list model
+        list_items = self.list_model.stringList()
+        list_items.append(pose_name)
+        self.list_model.setStringList(list_items)
 
     # Recalls the pose data of the selected list pose
     def pose_recall(self):
-        # Retrieves data about the currently selected item in the list
+        # Get the indexes of the selected items in the list view
         selected_list_indexes = self.listView.selectedIndexes()
+        # Get the pose name (data) of the first selected item
         selected_list_item = selected_list_indexes[0].data()
 
-        # Get the pose data for the selected pose name
+        # Check if the selected pose name is present in the 'poses' dictionary
         if selected_list_item in self.poses:
+            # Get the pose data (transforms) for the selected pose name
             pose_data = self.poses[selected_list_item]
-            
-            # Loop through the pose_data items to get the transformations for each
-            for object_name, object_data in pose_data.items():
-                translation = object_data['Translate']
-                rotation = object_data['Rotation']
-                scale = object_data['Scale']
 
-                # Set translation, rotation, and scale attributes of the selected object
-                cmds.setAttr(f'{object_name}.translate', translation[0], translation[1], translation[2], type='double3')
-                cmds.setAttr(f'{object_name}.rotate', rotation[0], rotation[1], rotation[2], type='double3')
-                cmds.setAttr(f'{object_name}.scale', scale[0], scale[1], scale[2], type='double3')
+            # Loop through each object's data in the pose data
+            for object_name, object_data in pose_data.items():
+                # Check if the object still exists in the scene and retrieve transform data
+                if cmds.objExists(object_name):
+                    translation = object_data['Translate']
+                    rotation = object_data['Rotation']
+                    scale = object_data['Scale']
+
+                    # Check if translation attributes are locked and set if not
+                    if not cmds.getAttr(f'{object_name}.translateX', lock=True):
+                        cmds.setAttr(f'{object_name}.translateX', translation[0])
+                    if not cmds.getAttr(f'{object_name}.translateY', lock=True):
+                        cmds.setAttr(f'{object_name}.translateY', translation[1])
+                    if not cmds.getAttr(f'{object_name}.translateZ', lock=True):
+                        cmds.setAttr(f'{object_name}.translateZ', translation[2])
+                    
+                    # Check if rotation attributes are locked and set if not
+                    if not cmds.getAttr(f'{object_name}.rotateX', lock=True):
+                        cmds.setAttr(f'{object_name}.rotateX', rotation[0])
+                    if not cmds.getAttr(f'{object_name}.rotateY', lock=True):
+                        cmds.setAttr(f'{object_name}.rotateY', rotation[1])
+                    if not cmds.getAttr(f'{object_name}.rotateZ', lock=True):
+                        cmds.setAttr(f'{object_name}.rotateZ', rotation[2])
+
+                    # Check if scale attributes are not locked and not connected, then set
+                    if not cmds.getAttr(f'{object_name}.scaleX', lock=True) and not cmds.listConnections(f'{object_name}.scaleX'):
+                        cmds.setAttr(f'{object_name}.scaleX', scale[0])
+                    if not cmds.getAttr(f'{object_name}.scaleY', lock=True) and not cmds.listConnections(f'{object_name}.scaleY'):
+                        cmds.setAttr(f'{object_name}.scaleY', scale[1])
+                    if not cmds.getAttr(f'{object_name}.scaleZ', lock=True) and not cmds.listConnections(f'{object_name}.scaleZ'):
+                        cmds.setAttr(f'{object_name}.scaleZ', scale[2])
 
     # Deletes the selected pose from the list
     def pose_delete(self):
@@ -124,7 +152,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
             list_items = self.list_model.stringList()
             list_items.remove(selected_list_item)
             self.list_model.setStringList(list_items)
-        
+
     # Resets the UI by clearing all the stored data
     def new_file(self):
         self.current_file = 'new'
