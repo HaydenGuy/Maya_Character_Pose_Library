@@ -226,15 +226,15 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
     # Gets the file name of the open/saved file by passing a file path
     def get_file_name(self, file_path):
         '''
+            Updates the current file variable to be the file path 
             Extract the file name from file path
             If the file path contains a / it splits it and extracts the last part (the file name)
             If no / it assigns the file name as the file path
             Updates the window title to be the name of the newly named file
-            Updates the current file variable to be the file name
         '''
+        self.current_file = file_path
         file_name = file_path.split('/')[-1] if '/' in file_path else file_path
         self.setWindowTitle(f'Character Pose Library - {file_name}')
-        self.current_file = file_name
 
     # Closes the Character Pose Library window
     def quit_file(self):
