@@ -116,20 +116,20 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
                     rotation = object_data['Rotation']
                     scale = object_data['Scale']
 
-                    # Check if translation attributes are locked and set if not
-                    if not cmds.getAttr(f'{object_name}.translateX', lock=True):
+                    # Check if translation attributes are locked and not connected, then set
+                    if not cmds.getAttr(f'{object_name}.translateX', lock=True) and not cmds.listConnections(f'{object_name}.translateX'):
                         cmds.setAttr(f'{object_name}.translateX', translation[0])
-                    if not cmds.getAttr(f'{object_name}.translateY', lock=True):
+                    if not cmds.getAttr(f'{object_name}.translateY', lock=True) and not cmds.listConnections(f'{object_name}.translateY'):
                         cmds.setAttr(f'{object_name}.translateY', translation[1])
-                    if not cmds.getAttr(f'{object_name}.translateZ', lock=True):
+                    if not cmds.getAttr(f'{object_name}.translateZ', lock=True) and not cmds.listConnections(f'{object_name}.translateZ'):
                         cmds.setAttr(f'{object_name}.translateZ', translation[2])
-                    
-                    # Check if rotation attributes are locked and set if not
-                    if not cmds.getAttr(f'{object_name}.rotateX', lock=True):
+
+                    # Check if rotation attributes are locked and not connected, then set
+                    if not cmds.getAttr(f'{object_name}.rotateX', lock=True) and not cmds.listConnections(f'{object_name}.rotateX'):
                         cmds.setAttr(f'{object_name}.rotateX', rotation[0])
-                    if not cmds.getAttr(f'{object_name}.rotateY', lock=True):
+                    if not cmds.getAttr(f'{object_name}.rotateY', lock=True) and not cmds.listConnections(f'{object_name}.rotateY'):
                         cmds.setAttr(f'{object_name}.rotateY', rotation[1])
-                    if not cmds.getAttr(f'{object_name}.rotateZ', lock=True):
+                    if not cmds.getAttr(f'{object_name}.rotateZ', lock=True) and not cmds.listConnections(f'{object_name}.rotateZ'):
                         cmds.setAttr(f'{object_name}.rotateZ', rotation[2])
 
                     # Check if scale attributes are not locked and not connected, then set
