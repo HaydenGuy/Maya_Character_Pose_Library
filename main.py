@@ -1,22 +1,18 @@
 import sys
 import json
 import maya.cmds as cmds
-import maya.OpenMaya as om
+import maya.api.OpenMaya as om
 
-'''
-    Calls the path to the root directory so Maya can access files in the directory
-    Replace this with your own directory path
-'''
-sys.path.append('/mnt/32346261-2a77-4ea4-ad97-df46c23e0f72/Maya_Scripts/Character_Pose_Library')
+from PySide6.QtWidgets import QMainWindow, QApplication, QFileDialog
+from PySide6.QtCore import QStringListModel
+import Maya_Character_Pose_Library.UI.ui as ui
 
-from PySide2.QtWidgets import QMainWindow, QApplication, QFileDialog
-from PySide2.QtCore import QStringListModel
-import UI.Ui_Character_Pose_Library  # Import the entire module
-
-class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window):
+class LibraryWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
+
+        self.ui = ui.Ui_library_window()
+        self.ui.setupUi(self)
         
         # Initalize a dictionary of poses
         self.poses = {}
@@ -26,19 +22,19 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
 
         # Creates the list model that allows the list data to be displayed and manipulated
         self.list_model = QStringListModel()
-        self.listView.setModel(self.list_model)
+        self.ui.listView.setModel(self.list_model)
 
         # The signals for the UI buttons
-        self.pb_save.clicked.connect(self.pose_save)
-        self.pb_recall.clicked.connect(self.pose_recall)
-        self.pb_delete.clicked.connect(self.pose_delete)
+        self.ui.pb_save.clicked.connect(self.pose_save)
+        self.ui.pb_recall.clicked.connect(self.pose_recall)
+        self.ui.pb_delete.clicked.connect(self.pose_delete)
 
         # The signals for the File menu bar items
-        self.actionNew.triggered.connect(self.new_file)
-        self.actionOpen.triggered.connect(self.open_file)
-        self.actionSave.triggered.connect(self.save_file)
-        self.actionSave_As.triggered.connect(self.save_as_file)
-        self.actionQuit.triggered.connect(self.quit_file)
+        self.ui.actionNew.triggered.connect(self.new_file)
+        self.ui.actionOpen.triggered.connect(self.open_file)
+        self.ui.actionSave.triggered.connect(self.save_file)
+        self.ui.actionSave_As.triggered.connect(self.save_as_file)
+        self.ui.actionQuit.triggered.connect(self.quit_file)
 
     # Gets the transforms of the root object and returns the transforms dictionary
     def get_object_transforms(self, root_object):
@@ -66,7 +62,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
     # Saves the pose name and data when the button is pressed
     def pose_save(self):
         # Sets the pose name to the text in the line edit
-        pose_name = self.pose_name_input.text()
+        pose_name = self.ui.pose_name_input.text()
 
         # Raises a warning if trying to save without a name
         if pose_name == '':
@@ -99,7 +95,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
     # Recalls the pose data of the selected list pose
     def pose_recall(self):
         # Get the indexes of the selected items in the list view
-        selected_list_indexes = self.listView.selectedIndexes()
+        selected_list_indexes = self.ui.listView.selectedIndexes()
         # Get the pose name (data) of the first selected item
         selected_list_item = selected_list_indexes[0].data()
 
@@ -143,7 +139,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
     # Deletes the selected pose from the list
     def pose_delete(self):
         # Retrieves data about the currently selected item in the list
-        selected_list_indexes = self.listView.selectedIndexes()
+        selected_list_indexes = self.ui.listView.selectedIndexes()
         selected_list_item = selected_list_indexes[0].data()
 
         # Remove the pose data from the dictionary and update the list model
@@ -157,7 +153,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
     def new_file(self):
         self.current_file = 'new'
         self.setWindowTitle('Character Pose Library - new')
-        self.pose_name_input.clear()
+        self.ui.pose_name_input.clear()
         self.poses = {}
         self.list_model.setStringList([])
 
@@ -176,7 +172,7 @@ class LibraryWindow(QMainWindow, UI.Ui_Character_Pose_Library.Ui_library_window)
             Assign self.poses dictionary the data from the loaded file
         '''
         if file_path:
-            self.pose_name_input.clear()
+            self.ui.pose_name_input.clear()
             self.poses = {}
             self.list_model.setStringList([])
             self.get_file_name(file_path)
